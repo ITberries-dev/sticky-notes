@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import socketIOClient from "socket.io-client";
+import { BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 
-import logo from './logo.svg';
-import './App.css';
+import './App.scss';
+
+import LoginForm from './components/LoginForm';
 
 const ENDPOINT = "http://127.0.0.1:4001";
 
@@ -14,7 +15,19 @@ function App() {
   }, []);
 
   return (
-    <div></div>
+    <Router>
+      <div className="App">
+        <Switch>
+        <Route path="/room/:roomID">
+          <h1>aaa</h1>
+        </Route>
+
+        <Route path="/">
+          <LoginForm />
+        </Route>
+        </Switch>
+      </div>
+    </Router>
   );
 }
 
