@@ -13,6 +13,9 @@ app.use(pino);
 
 io.on("connection", (socket) => {
   console.log("New client connected");
+  socket.on("goToRoom", (room) => {
+    socket.join(room);
+  })
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });

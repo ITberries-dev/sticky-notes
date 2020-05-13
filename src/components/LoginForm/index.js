@@ -1,16 +1,31 @@
-import React from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { useForm } from "react-hook-form";
 import { useHistory } from 'react-router-dom';
+import socketIOClient from "socket.io-client";
 
 import './style.scss';
 
-function LoginForm(props) {
+const ENDPOINT = "http://127.0.0.1:4001";
+
+function LoginForm() {
   const { register, handleSubmit, errors } = useForm();
   const history = useHistory();
+  const [ room, setRoom ] = useState('');
+  const isInitialMount = useRef(true);
+
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+    } else {
+      const socket = socketIOClient(ENDPOINT);
+      socket.emit('goToRoom', room)
+      history.push(`/room/${room}`)
+    }
+  }, [room]);
 
   const onSubmit = data => {
     console.log(data);
-    history.push(`/room/${data.room}`)
+    setRoom(data.room)
   }
 
   return (

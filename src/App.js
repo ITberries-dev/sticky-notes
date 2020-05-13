@@ -1,19 +1,11 @@
-import React, { useState, useEffect } from "react";
-import socketIOClient from "socket.io-client";
+import React from "react";
 import { BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 
 import './App.scss';
 
 import LoginForm from './components/LoginForm';
 
-const ENDPOINT = "http://127.0.0.1:4001";
-
 function App() {
-  const [response, setResponse] = useState("");
-
-  useEffect(() => {
-    const socket = socketIOClient(ENDPOINT);
-  }, []);
 
   return (
     <Router>
