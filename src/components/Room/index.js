@@ -1,22 +1,27 @@
 import React, { useState, useEffect } from 'react';
-import socketIOClient from "socket.io-client";
 import { useHistory } from 'react-router-dom';
+import { socket } from '../../service/sockets';
 
 import './style.scss';
-
-const ENDPOINT = "http://127.0.0.1:4001";
 
 function Room() {
   const [ cards, setCards ] = useState([]);
   const history = useHistory();
-
   
   useEffect(() => {
     const room = history.location.pathname.replace('/room/', '');
-    const socket = socketIOClient(ENDPOINT);
 
     socket.emit('goToRoom', room)
   }, [history])
+
+  useEffect(() => {
+    socket.on('roomCards', cardsData => {
+      console.log(cardsData);
+      cardsData.forEach(cardData => {
+        setCards(cards.concat(cardData.text))
+      })
+    })
+  }, [cards])
   
   const addCard = () => {
     setCards(cards.concat('a'))
@@ -29,6 +34,5 @@ function Room() {
     </div>
   );
 }
- 
 
 export default Room;
