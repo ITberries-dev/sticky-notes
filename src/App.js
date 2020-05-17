@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Switch, Route} from 'react-router-dom';
 import './App.scss';
 
 import LoginForm from './components/LoginForm';
+import Room from './components/Room';
 
 function App() {
 
@@ -12,7 +13,7 @@ function App() {
       <div className="App">
         <Switch>
         <Route path="/room/:roomID">
-          <h1>aaa</h1>
+          <Room />
         </Route>
 
         <Route path="/">
