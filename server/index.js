@@ -5,11 +5,18 @@ const http = require("http");
 const socketIo = require("socket.io");
 const mongoose = require('mongoose');
 
-mongoose.connect('mongodb://localhost:27017/sticky-notes', { useNewUrlParser: true });
+mongoose.connect('mongodb://localhost:27017/sticky-notes', {
+  useNewUrlParser: true
+});
 const Schema = mongoose.Schema;
 const roomSchema = new Schema({
-  name: { type: String, required: true },
-  cards: [{ text: String }]
+  name: {
+    type: String,
+    required: true
+  },
+  cards: [{
+    text: String
+  }]
 })
 const Room = mongoose.model('Room', roomSchema);
 
@@ -18,32 +25,52 @@ const server = http.createServer(app);
 const io = socketIo(server);
 const db = mongoose.connection;
 
-app.use(bodyParser.urlencoded({ extended: false }));
+app.use(bodyParser.urlencoded({
+  extended: false
+}));
 app.use(pino);
 
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 
 io.on("connection", (socket) => {
   console.log("New client connected");
-  let socketRoom;
   socket.on("goToRoom", (room) => {
-    socketRoom = room;
-    socket.join(socketRoom);
-    console.log('joined room', socketRoom);
+    socket.join(room);
 
-    Room.find({ name: socketRoom })
-    .then(doc => {
-      if(doc.length === 0){
-        let roomData = new Room({name: socketRoom});
-        roomData.save(function(err, roomData){
-          console.log('some data', roomData)
+    Room.find({
+        name: room
+    })
+    .then(roomDocs => {
+      if (roomDocs.length === 0) {
+        let roomData = new Room({
+          name: room
+        });
+        roomData.save(function (err, roomData) {
           if (err) return console.error(err);
-          io.to(socketRoom).emit('roomCards', roomData.cards);
+          io.to(room).emit('roomCards', roomData.cards);
         });
       } else {
-        console.log(doc[0]);
-        io.to(socketRoom).emit('roomCards', doc[0].cards);
+        io.to(room).emit('roomCards', roomDocs[0].cards);
       }
+    })
+  })
+
+  socket.on("addCard", (room, card) => {
+    console.log('add', card, room)
+    Room.updateOne({
+      name: room
+    }, {
+      $push: {
+        cards: {
+          text: card
+        }
+      }
+    }, () => {
+      Room.findOne({
+        name: room
+      }).then((doc) => {
+        console.log(doc);
+      })
     })
   })
   socket.on("disconnect", () => {

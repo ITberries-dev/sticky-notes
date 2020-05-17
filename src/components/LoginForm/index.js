@@ -16,7 +16,7 @@ function LoginForm() {
     } else {
       history.push(`/room/${room}`)
     }
-  }, [room]);
+  }, [room, history]);
 
   const onSubmit = data => {
     console.log(data);
