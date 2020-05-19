@@ -11,7 +11,22 @@ function Room() {
   const history = useHistory();
   const room = history.location.pathname.replace('/room/', '');
 
-  
+  socket.on('cardID', cardData => {
+    console.log('dodano', cardData);
+    setCards([...cards, { id: cardData._id, text: cardData.text, position: cardData.position }]);
+  })
+
+  socket.on('cardMoved', (cardID, newPosition) => {
+    let temp = cards;
+      temp.forEach(card => {
+        if(card.id == cardID){
+          card.position = newPosition;
+        }
+        return
+      })
+      setCards(temp);
+  })
+
   useEffect(() => {
     socket.emit('goToRoom', room)
 
@@ -19,7 +34,7 @@ function Room() {
       console.log(cardsData);
       let temp = [];
       cardsData.forEach(cardData => {
-        temp.push(cardData.text)
+        temp.push({ id: cardData._id, text: cardData.text, position: cardData.position })
       })
       setCards(temp);
     })
@@ -27,13 +42,12 @@ function Room() {
   
   const addCard = () => {
     socket.emit("addCard", room, 'tekścik');
-    setCards([...cards, 'tekścik']);
   }
 
   return (
     <div className="Room">
       <button onClick={addCard}>Dodaj</button>
-      {cards.map((card, i) => <Card key={i} text={card}/>)}
+      {cards.map((card, i) => <Card key={i} id={card.id} text={card.text} position={card.position} room={room}/>)}
     </div>
   );
 }

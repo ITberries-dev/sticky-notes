@@ -15,7 +15,11 @@ const roomSchema = new Schema({
     required: true
   },
   cards: [{
-    text: String
+    text: String,
+    position: {
+      x: Number,
+      y: Number,
+    }
   }]
 })
 const Room = mongoose.model('Room', roomSchema);
@@ -39,40 +43,63 @@ io.on("connection", (socket) => {
 
     Room.find({
         name: room
-    })
-    .then(roomDocs => {
-      if (roomDocs.length === 0) {
-        let roomData = new Room({
-          name: room
-        });
-        roomData.save(function (err, roomData) {
-          if (err) return console.error(err);
-          io.to(room).emit('roomCards', roomData.cards);
-        });
-      } else {
-        io.to(room).emit('roomCards', roomDocs[0].cards);
-      }
-    })
+      })
+      .then(roomDocs => {
+        if (roomDocs.length === 0) {
+          let roomData = new Room({
+            name: room
+          });
+          roomData.save(function (err, roomData) {
+            if (err) return console.error(err);
+            io.to(room).emit('roomCards', roomData.cards);
+          });
+        } else {
+          io.to(room).emit('roomCards', roomDocs[0].cards);
+        }
+      })
   })
 
-  socket.on("addCard", (room, card) => {
-    console.log('add', card, room)
+  socket.on("addCard", (room, cardText) => {
+    console.log('add', cardText, room)
     Room.updateOne({
       name: room
     }, {
       $push: {
         cards: {
-          text: card
+          text: cardText,
+          position: {
+            x: 0,
+            y: 0
+          }
         }
       }
     }, () => {
       Room.findOne({
         name: room
       }).then((doc) => {
-        console.log(doc);
+        console.log(doc.cards[doc.cards.length - 1]);
+        socket.emit("cardID", doc.cards[doc.cards.length - 1])
+        socket.broadcast.to(room).emit("cardID", doc.cards[doc.cards.length - 1])
       })
     })
   })
+
+  socket.on("moveCard", (room, id, newPosition) => {
+    Room.findOne({
+      name: room,
+      "cards._id": id
+    }).then((doc) => {
+      doc.cards.forEach(card => {
+        if(card._id == id){
+          card.position = newPosition
+          return
+        }
+      })
+      doc.save();
+      socket.broadcast.to(room).emit("cardMoved", id, newPosition)
+    })
+  })
+
   socket.on("disconnect", () => {
     console.log("Client disconnected");
   });
